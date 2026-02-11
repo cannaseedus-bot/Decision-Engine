@@ -1,0 +1,216 @@
+(* ASX Decision & Verification Grammar (EBNF) *)
+(* Status: Canonical *)
+(* Scope: Structural legality only *)
+
+(* 0. Lexical Foundations *)
+Identifier   ::= Letter { Letter | Digit | "_" | "-" } ;
+String       ::= '"' { Character } '"' ;
+Number       ::= Digit { Digit } [ "." Digit { Digit } ] ;
+Boolean      ::= "true" | "false" ;
+Null         ::= "null" ;
+
+Value        ::= String | Number | Boolean | Null | Object | Array ;
+
+Array        ::= "[" [ Value { "," Value } ] "]" ;
+Object       ::= "{" [ Member { "," Member } ] "}" ;
+Member       ::= Identifier ":" Value ;
+
+(* 1. Atomic Program *)
+AtomicProgram ::= Atom { Atom } ;
+
+(* 2. Atom *)
+Atom ::= Header Body ;
+
+(* 2.1 Header *)
+Header ::= "@" Identifier ":" Role ;
+
+Role ::= "state"
+       | "control"
+       | "flow"
+       | "invariant" ;
+
+(* 3. Body *)
+Body ::= Object ;
+
+(* 4. Flow Atom *)
+FlowBody ::= "{"
+               "from" ":" Identifier ","
+               "to"   ":" Identifier
+             "}" ;
+
+(* 5. Invariant Atom *)
+InvariantBody ::= "{"
+                    "forbid" ":" Object
+                  "}" ;
+
+(* 6. Decision Atom (π + Entropy) *)
+DecisionBody ::= "{"
+  "select" ":" SelectionSet ","
+  "policy" ":" Policy ","
+  "pi" ":" PiWeights ","
+  "entropy_gate" ":" EntropyGate
+"}" ;
+
+(* 6.1 Selection Set *)
+SelectionSet ::= "[" Identifier { "," Identifier } "]" ;
+
+(* 6.2 Policy *)
+Policy ::= "{"
+             "tie_breaker" ":" PolicyName
+           "}" ;
+
+PolicyName ::= "FIRST"
+             | "LAST"
+             | "HIGHEST_PI"
+             | "LOWEST_PI"
+             | "STABLE"
+             | "DETERMINISTIC" ;
+
+(* 6.3 π Weights *)
+PiWeights ::= "{"
+                Identifier ":" Number
+                { "," Identifier ":" Number }
+              "}" ;
+
+(* 6.4 Entropy Gate *)
+EntropyGate ::= "{"
+                  "source" ":" Identifier ","
+                  "max" ":" Number
+                "}" ;
+
+(* 7. SCXQ2 Structural Encoding *)
+(* Grammar defines shape, not compression math. *)
+SCXQ2Record ::= "{"
+  "CTRL" ":" Opcode ","
+  "SEL" ":" SelectionSet ","
+  "PI" ":" PiWeights ","
+  "ENT" ":" EntropyGate ","
+  "POL" ":" PolicyName ","
+  "BAN" ":" Number
+"}" ;
+
+(* 8. SCXQ4 Structural Frame *)
+SCXQ4Frame ::= "{"
+  "op" ":" Opcode ","
+  "count" ":" Number ","
+  "ids" ":" Array ","
+  "pi" ":" Object ","
+  "entropy" ":" EntropyGate ","
+  "policy" ":" PolicyName ","
+  "mask" ":" Number
+"}" ;
+
+(* 9. Opcodes *)
+Opcode ::= "DECIDE"
+         | "COLLAPSE"
+         | "NO_DECISION"
+         | "ILLEGAL" ;
+
+(* 10. Micronaut Decision Surface *)
+DecisionSurface ::= "{"
+  "@surface" ":" "decision" ","
+  "candidates" ":" SelectionSet ","
+  "entropy_source" ":" Identifier ","
+  "policy" ":" PolicyName ","
+  "pi" ":" PiWeights
+"}" ;
+
+(* 11. Conformance Vector *)
+ConformanceVector ::= "{"
+  "id" ":" String ","
+  "entropy" ":" Number ","
+  "select" ":" SelectionSet ","
+  "pi" ":" PiWeights ","
+  "entropy_gate" ":" EntropyGate ","
+  "policy" ":" PolicyName ","
+  "expected" ":" ExpectedResult
+"}" ;
+
+ExpectedResult ::= "{"
+  "opcode" ":" Opcode ","
+  "result" ":" ( Identifier | Null )
+"}" ;
+
+(* 12. Decision Trace Attestation *)
+DecisionTrace ::= "{"
+  "@trace" ":" "decision" ","
+  "frame_hash" ":" String ","
+  "entropy" ":" EntropyTrace ","
+  "policy" ":" PolicyName ","
+  "ranking" ":" RankingTrace ","
+  "opcode" ":" Opcode ","
+  "result" ":" Identifier
+"}" ;
+
+EntropyTrace ::= "{"
+  "value" ":" Number ","
+  "max" ":" Number ","
+  "gate" ":" ( "PASS" | "BLOCK" )
+"}" ;
+
+RankingTrace ::= "{"
+  "winner" ":" Identifier ","
+  "pi" ":" Number
+"}" ;
+
+(* 13. Shard Verdict *)
+ShardVerdict ::= "{"
+  "@shard" ":" Identifier ","
+  "vector_id" ":" String ","
+  "verdict" ":" ( "PASS" | "FAIL" ) ","
+  "input_hash" ":" String ","
+  "signature" ":" String
+"}" ;
+
+(* 14. Compliance Badge Record *)
+BadgeRecord ::= "{"
+  "engine" ":" String ","
+  "version" ":" String ","
+  "status" ":" String ","
+  "vectors_hash" ":" String ","
+  "impl_hash" ":" String ","
+  "timestamp" ":" String ","
+  "signatures" ":" Array
+"}" ;
+
+(* 15. Primitive Data Types (Schema Level) *)
+PrimitiveType ::= "anyURI"
+                | "base64Binary"
+                | "boolean"
+                | "date"
+                | "dateTime"
+                | "decimal"
+                | "double"
+                | "duration"
+                | "float"
+                | "hexBinary"
+                | "gDay"
+                | "gMonth"
+                | "gMonthDay"
+                | "gYear"
+                | "gYearMonth"
+                | "NOTATION"
+                | "QName"
+                | "string"
+                | "time" ;
+
+(* Type Construction *)
+Type ::= PrimitiveType
+       | Restriction
+       | ListType
+       | UnionType ;
+
+Restriction ::= "{"
+  "type" ":" PrimitiveType ","
+  "restriction" ":" Object
+"}" ;
+
+ListType ::= "{"
+  "type" ":" "list" ","
+  "of" ":" Type
+"}" ;
+
+UnionType ::= "{"
+  "type" ":" "union" ","
+  "of" ":" "[" Type { "," Type } "]"
+"}" ;
