@@ -1,0 +1,38 @@
+[
+  {
+    "id": "vector-first-over-entropy",
+    "entropy": 0.95,
+    "select": ["A", "B"],
+    "pi": {
+      "A": 0.2,
+      "B": 0.8
+    },
+    "entropy_gate": {
+      "source": "rng",
+      "max": 0.5
+    },
+    "policy": "HIGHEST_PI",
+    "expected": {
+      "opcode": "COLLAPSE",
+      "result": "A"
+    }
+  },
+  {
+    "id": "vector-highest-pi",
+    "entropy": 0.1,
+    "select": ["A", "B"],
+    "pi": {
+      "A": 0.2,
+      "B": 0.8
+    },
+    "entropy_gate": {
+      "source": "rng",
+      "max": 0.5
+    },
+    "policy": "HIGHEST_PI",
+    "expected": {
+      "opcode": "COLLAPSE",
+      "result": "B"
+    }
+  }
+]
