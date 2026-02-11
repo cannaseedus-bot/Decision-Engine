@@ -1,0 +1,33 @@
+{
+  "vector_id": "DV-001",
+  "verdicts": [
+    {
+      "@shard": "L",
+      "vector_id": "DV-001",
+      "verdict": "PASS",
+      "input_hash": "sha256:placeholder",
+      "signature": "ed25519:placeholder"
+    },
+    {
+      "@shard": "E",
+      "vector_id": "DV-001",
+      "verdict": "PASS",
+      "input_hash": "sha256:placeholder",
+      "signature": "ed25519:placeholder"
+    },
+    {
+      "@shard": "R",
+      "vector_id": "DV-001",
+      "verdict": "PASS",
+      "input_hash": "sha256:placeholder",
+      "signature": "ed25519:placeholder"
+    },
+    {
+      "@shard": "C",
+      "vector_id": "DV-001",
+      "verdict": "PASS",
+      "input_hash": "sha256:placeholder",
+      "signature": "ed25519:placeholder"
+    }
+  ]
+}
